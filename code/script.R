@@ -54,9 +54,56 @@ unionbases= full_join(x=caracteristicasgenerales,y=ocupados,by=c("SECUENCIA_P", 
 
 export(x=unionbases , file="output/unionbases.rds")
 
+# 6. Descriptivas de un conjunto de datos
 
+#Tabla1: Descripción general de ingresos,pension, departamento y edad
+summary(unionbases[,c("INGLABO", "P6040", "DPTO","P6920")])
 
+#Tabla2:Descripción del promedio y media de ingresos y años de escolaridad según el sexo
+unionbases %>%
+  select(INGLABO,P6020,ESC)%>%
+  group_by(P6020)  %>% 
+  summarise(promedio_inglabo = mean(INGLABO, na.rm = T),
+            media_inglabo = median(INGLABO, na.rm = T),
+            promedio_ESC = mean(ESC, na.rm = T),
+            media_ESC = median(ESC, na.rm = T))
 
+ 
 
+#Tabla3:Descripción de promedio y media de ingreso de los ocupados y la edad promedio y media  de los que estan ocupados y los que no
+
+unionbases %>%
+  select(INGLABO,ocupados,P6040)%>%
+  group_by(ocupados)  %>% 
+  summarise(promedio_inglabo = mean(INGLABO, na.rm = T),
+            media_inglabo = median(INGLABO, na.rm = T),
+            promedio_P6040 = mean(P6040, na.rm = T),
+            media_ESC = median(P6040, na.rm = T))
+
+#Grafico1: Los ingresos promedios según su relación con el jefe de hogar
+graph_1 <-unionbases %>% 
+  group_by(P6050) %>% 
+  summarise(ingresos = mean(INGLABO, na.rm = T)) %>%
+
+  ggplot(data=. , mapping = aes(x = as.factor(P6050) , y = ingresos, fill = as.factor(P6050))) + 
+  geom_bar(stat = "identity") 
+graph_1
+
+jpeg("output/graph1.jpeg", quality = 75) #Exportamos los gráficos jpeg con la función jpeg() según https://r-coder.com/exportar-graficos-r/
+
+#Grafico2: Los ingresos según la edad
+graph_2 <- ggplot(data = unionbases, 
+                  mapping = aes( x =P6040 , y = INGLABO, group= as.character(P6040), color = as.factor(P6040))) +
+  geom_point(size = 0.5)
+graph_2
+jpeg("output/graph2.jpeg", quality = 75)
+  
+#Grafico3: La densidad de los ingresos segun el grado de escolaridad
+graph_3 <- filter(unionbases, !is.na(ESC) & INGLABO < 1e+07 ) %>% 
+  ggplot(data=. , mapping = aes(x = INGLABO, group = as.factor(ESC), fill = as.factor(ESC))) + 
+  geom_density() 
+
+graph_3
+jpeg("output/graph3.jpeg", quality = 75)
 
 
